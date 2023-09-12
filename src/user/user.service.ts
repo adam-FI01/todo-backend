@@ -3,20 +3,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto/create-user.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto/login-user.dto';
+import { Model } from 'mongoose';
+import { User } from '../schemas';
+import { InjectModel } from '@nestjs/mongoose';
 
 // Simulated user data store for demonstration purposes.
 const users = [];
 
 @Injectable()
 export class UserService {
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
   async register(createUserDto: CreateUserDto) {
-    // Simulate user creation (you should replace this with actual database interaction).
-    const newUser = {
-      id: users.length + 1,
-      ...createUserDto,
-    };
-    users.push(newUser);
-    return newUser;
+    const createdUser = new this.userModel(createUserDto);
+    return await createdUser.save();
   }
 
   async login(loginUserDto: LoginUserDto) {
