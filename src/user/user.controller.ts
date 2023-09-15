@@ -1,7 +1,8 @@
 // user.controller.ts
 
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UsePipes, ValidationPipe, HttpStatus, HttpException } from "@nestjs/common";
 import { UserService } from './user.service';
+import { validate } from "class-validator";
 
 // Define the CreateUserDto class with properties for user registration.
 class CreateUserDto {
@@ -13,6 +14,7 @@ class CreateUserDto {
 // Define the LoginUserDto class with properties for user login.
 class LoginUserDto {
   readonly email: string;
+  readonly username: string;
   readonly password: string;
 }
 
@@ -22,6 +24,7 @@ export class UserController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
+    console.log(createUserDto);
     return this.userService.register(createUserDto);
   }
 

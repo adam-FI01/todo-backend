@@ -1,11 +1,12 @@
 // user.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto/create-user.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto/login-user.dto';
 import { Model } from 'mongoose';
 import { User } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
+import { validate } from 'class-validator';
 
 // Simulated user data store for demonstration purposes.
 const users = [];
@@ -13,9 +14,23 @@ const users = [];
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
   async register(createUserDto: CreateUserDto) {
-    const createdUser = new this.userModel(createUserDto);
-    return await createdUser.save();
+    const user = new CreateUserDto();
+    user.username = createUserDto.username;
+    user.email = createUserDto.email;
+    user.password = createUserDto.password;
+
+    // Validate the DTO
+    const validationErrors = await validate(user);
+    if (validationErrors.length > 0) {
+      throw new BadRequestException(validationErrors);
+    } else {
+      const createdUser = new this.userModel(user);
+      return await createdUser.save();
+    }
+
+    // Create and save the user
   }
 
   async login(loginUserDto: LoginUserDto) {
