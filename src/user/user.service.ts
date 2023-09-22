@@ -1,15 +1,18 @@
 // user.service.ts
 
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto/create-user.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto/login-user.dto';
 import { Model } from 'mongoose';
 import { User } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { validate } from 'class-validator';
+import * as bcrypt from 'bcrypt';
 
-// Simulated user data store for demonstration purposes.
-const users = [];
 
 @Injectable()
 export class UserService {
@@ -21,12 +24,23 @@ export class UserService {
     user.email = createUserDto.email;
     user.password = createUserDto.password;
 
+    const existingUser = await this.userModel.findOne({
+      username: createUserDto.username,
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Username is already taken');
+  }
+
     // Validate the DTO
     const validationErrors = await validate(user);
     if (validationErrors.length > 0) {
       throw new BadRequestException(validationErrors);
     } else {
       const createdUser = new this.userModel(user);
+      // eslint-disable-next-line prettier/prettier
+      const hashedPassword = await this.hashPassword(createUserDto.password);
+      createUserDto.password = hashedPassword;
       return await createdUser.save();
     }
 
@@ -34,13 +48,31 @@ export class UserService {
   }
 
   async login(loginUserDto: LoginUserDto) {
-    // Simulate user login and authentication (replace with actual logic).
-    const user = users.find((u) => u.email === loginUserDto.email);
+    // eslint-disable-next-line prettier/prettier
+    const user = await this.userModel.findOne({ username: loginUserDto.username });
 
-    if (!user || user.password !== loginUserDto.password) {
-      throw new Error('Authentication failed');
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
 
+    const isPasswordValid = (await user.password) === loginUserDto.password;
+    console.log(isPasswordValid)
+
+    
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Return the authenticated user (you might want to generate and return a JWT token here)
     return user;
   }
+
+  async hashPassword(plainTextPassword: string): Promise<string> {
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
+    return hashedPassword;
+  }
+  
+
 }
