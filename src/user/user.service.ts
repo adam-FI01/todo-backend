@@ -12,11 +12,12 @@ import { User } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { validate } from 'class-validator';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService: JwtService) {}
 
   async register(createUserDto: CreateUserDto) {
     const user = new CreateUserDto();
@@ -48,14 +49,13 @@ export class UserService {
   }
 
   async login(loginUserDto: LoginUserDto) {
-    // eslint-disable-next-line prettier/prettier
     const user = await this.userModel.findOne({ username: loginUserDto.username });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    const isPasswordValid = (await user.password) === loginUserDto.password;
+    const isPasswordValid = user.password === loginUserDto.password;
     console.log(isPasswordValid)
 
     
@@ -63,8 +63,12 @@ export class UserService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Return the authenticated user (you might want to generate and return a JWT token here)
-    return user;
+    // If authentication is successful, generate and return a JWT token
+    const payload = { sub: user.id, username: user.username };
+    const accessToken = this.jwtService.sign(payload);
+    
+    return { access_token: accessToken, user};
+
   }
 
   async hashPassword(plainTextPassword: string): Promise<string> {
