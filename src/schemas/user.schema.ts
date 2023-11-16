@@ -1,6 +1,18 @@
-import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
+// user.schema.ts
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
-import { IsAlphanumeric, IsString, Length } from 'class-validator'; // Import SchemaTypes
+import { IsAlphanumeric, IsString, Length } from 'class-validator';
+import { ExerciseSchema } from './exercise.schema';
+
+
+@Schema()
+export class Exercise {
+  @Prop()
+  @IsString()
+  name: string;
+
+  // Add other exercise properties, if any
+}
 
 @Schema()
 export class User extends Document {
@@ -16,8 +28,10 @@ export class User extends Document {
   @IsAlphanumeric()
   password: string;
 
-  @Prop([{ type: SchemaTypes.ObjectId, ref: 'Exercise' }]) // Use SchemaTypes
-  exercises: Array<string>;
+  @Prop({ type: [ExerciseSchema] })
+  exercises: typeof ExerciseSchema[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+

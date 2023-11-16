@@ -3,16 +3,18 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto/create-user.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto/login-user.dto';
 import { Model } from 'mongoose';
-import { User } from '../schemas';
+import { Exercise, User } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { validate } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { AddExerciseDto, DeleteExerciseDto } from 'src/users/dto/exercises.dto';
 
 
 @Injectable()
@@ -69,6 +71,54 @@ export class UserService {
     
     return { access_token: accessToken, user};
 
+  }
+
+  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
+    const exerciseName = "squat";
+
+    const updateOperation = {
+      $addToSet: {
+        exercises: { name: exerciseName }
+      }
+    };
+  
+    try {
+      console.log('Before updateOne');
+  
+      const result = await this.userModel.findOneAndUpdate(
+        { _id: userId },
+        updateOperation,
+        { new: true }
+      );
+  
+      console.log(addExerciseDto);
+  
+      console.log('After updateOne, result:', result);
+  
+      // ... rest of the code
+    } catch (error) {
+      console.error('Error in addExercise:', error);
+      throw error;
+    }
+  }
+  
+
+ async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const exerciseIndex = user.exercises.findIndex(
+      (exercise) => exercise['_id'].toString() === deleteExerciseDto.exerciseId
+    );
+
+    if (exerciseIndex === -1) {
+      throw new NotFoundException('Exercise not found');
+    }
+
+    user.exercises.splice(exerciseIndex, 1);
+    return user.save();
   }
 
   async hashPassword(plainTextPassword: string): Promise<string> {

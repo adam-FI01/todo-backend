@@ -1,11 +1,15 @@
 // exercise.schema.ts
-import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { IsString } from 'class-validator';
+import { Document } from 'mongoose';
 
 @Schema()
 export class Exercise extends Document {
-  @Prop([{ type: SchemaTypes.ObjectId, ref: 'Set' }])
-  sessions: Array<string>;
+  @Prop()
+  @IsString()
+  name: string;
+
+  // Add other exercise properties, if any
 }
 
 export const ExerciseSchema = SchemaFactory.createForClass(Exercise);
