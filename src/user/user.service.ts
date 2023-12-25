@@ -73,25 +73,25 @@ export class UserService {
 
   }
 
-  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
-    const exerciseName = "squat";
-
+  /* async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
+    const exerciseName = addExerciseDto.name;
+  
     const updateOperation = {
       $addToSet: {
-        exercises: { name: exerciseName }
-      }
+        exercises: { name: exerciseName, sets: [] },
+      },
     };
   
     try {
-      console.log('Before updateOne');
-  
       const result = await this.userModel.findOneAndUpdate(
-        { _id: userId },
+        { _id: userId, [`exercises.name`]: { $ne: exerciseName } },
         updateOperation,
         { new: true }
       );
   
-      console.log(addExerciseDto);
+      if (!result) {
+        throw new NotFoundException('User not found');
+      }
   
       console.log('After updateOne, result:', result);
   
@@ -100,9 +100,42 @@ export class UserService {
       console.error('Error in addExercise:', error);
       throw error;
     }
+  } */
+
+  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
+    const exerciseName = addExerciseDto.name;
+  
+    const updateOperation = {
+      $set: {
+        [exerciseName]: [],
+      },
+    };
+  
+    try {
+      const result = await this.userModel.findOneAndUpdate(
+        { _id: userId, [exerciseName]: { $exists: false } },
+        updateOperation,
+        { new: true }
+      );
+  
+      if (!result) {
+        throw new NotFoundException('User not found');
+      }
+  
+      console.log('After updateOne, result:', result);
+  
+      // ... rest of the code
+    } catch (error) {
+      console.error('Error in addExercise:', error);
+      throw error;
+    }
+  
+    // Add a separate log to retrieve and display the current state of the user document
+    const updatedUser = await this.userModel.findById(userId);
+    console.log('Current user document:', updatedUser);
   }
   
-
+  
  async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
