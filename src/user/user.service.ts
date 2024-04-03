@@ -15,6 +15,7 @@ import { validate } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { AddExerciseDto, DeleteExerciseDto } from 'src/users/dto/exercises.dto';
+import { Request } from 'express';
 
 
 @Injectable()
@@ -73,18 +74,18 @@ export class UserService {
 
   }
 
-  /* async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
+  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
     const exerciseName = addExerciseDto.name;
   
     const updateOperation = {
       $addToSet: {
-        exercises: { name: exerciseName, sets: [] },
+        exercises: { name: exerciseName, date: [] },
       },
     };
   
     try {
       const result = await this.userModel.findOneAndUpdate(
-        { _id: userId, [`exercises.name`]: { $ne: exerciseName } },
+        { _id: userId, 'exercises.name': { $ne: exerciseName } }, // Corrected the condition
         updateOperation,
         { new: true }
       );
@@ -100,9 +101,9 @@ export class UserService {
       console.error('Error in addExercise:', error);
       throw error;
     }
-  } */
+  }
 
-  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
+  /* async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
     const exerciseName = addExerciseDto.name;
   
     const updateOperation = {
@@ -133,7 +134,7 @@ export class UserService {
     // Add a separate log to retrieve and display the current state of the user document
     const updatedUser = await this.userModel.findById(userId);
     console.log('Current user document:', updatedUser);
-  }
+  } */
   
   
  async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
@@ -160,6 +161,27 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
     return hashedPassword;
   }
+  /* async getUsernameById(username: string): Promise<any> {
+    const user = await this.userModel.findOne({ username });
   
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+  
+    return user._id;
+  } */
 
+  async getUsernameById(req: Request): Promise<any> {
+    const token = req.cookies['jwtToken']; // Assuming the JWT token is stored in a cookie named 'jwtToken'
+    if (!token) {
+      throw new UnauthorizedException('JWT token not found in cookies');
+    }
+
+    try {
+      const decodedToken = this.jwtService.decode(token) as any;
+      return decodedToken.username;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid JWT token');
+    }
+  }
 }

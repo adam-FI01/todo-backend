@@ -1,12 +1,13 @@
 // user.controller.ts
 
-import { Controller, Post, Body, UsePipes, ValidationPipe, HttpStatus, HttpException, Patch, Delete, Param } from "@nestjs/common";
+import { Controller, Post, Body, UsePipes, ValidationPipe, HttpStatus, HttpException, Patch, Delete, Param, Get, Query, NotFoundException, Req, UnauthorizedException } from "@nestjs/common";
 import { UserService } from './user.service';
 import { validate } from "class-validator";
 import { LoginUserDto } from "src/users/dto/login-user.dto/login-user.dto";
 import { CreateUserDto } from "src/users/dto/create-user.dto/create-user.dto";
 import { AddExerciseDto, DeleteExerciseDto } from "src/users/dto/exercises.dto";
-
+import { LoginUsernameDto } from "src/login-username.dto/login-username.dto";
+import { Request } from "express";
 // ... (existing code)
 
 @Controller('users')
@@ -24,7 +25,7 @@ export class UserController {
     return this.userService.login(loginUserDto);
   }
 
-  @Post(':id/exercises')
+  @Post(':id/add-exercise')
   async addExercise(
     @Param('id') id: string,
     @Body() addExerciseDto: AddExerciseDto,
@@ -37,5 +38,16 @@ export class UserController {
     // Ensure you are passing an instance of DeleteExerciseDto
     const deleteExerciseDto: DeleteExerciseDto = { exerciseId };
     return this.userService.deleteExercise(id, deleteExerciseDto);
+  }
+
+  /* @Get('getUserByUsername')
+  async getUsernameById(@Body() usernameDto: LoginUsernameDto) {
+    const { username } = usernameDto;
+    return this.userService.getUsernameById();
+  } */
+
+  @Get('getUserByUsername')
+  async getUsernameById(@Req() req: Request) {
+    return this.userService.getUsernameById(req);
   }
 }
