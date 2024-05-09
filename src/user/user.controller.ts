@@ -34,39 +34,32 @@ export class UserController {
     return this.userService.addExercise(, addExerciseDto);
   } */
 
-@Post('/add-exercise')
-async addExercise(
-  @Req() req: Request,
-) {
-  try {
-    const addExerciseDto: any = req.body as AddExerciseDto;
+  @Post('/add-exercise')
+  async addExercise(
+    @Req() req: Request,
+    @Body() addExerciseDto: AddExerciseDto
+  ) {
+    try {
+      // Extract the JWT token from the request headers
+      const token = req?.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in headers');
+      }
 
-    // Extract the JWT token from the request headers
-    const token = req?.cookies['jwtToken'];
-    if (!token) {
-      throw new UnauthorizedException('JWT token not found in headers');
+      // Decode the JWT token to get the username
+      const decodedToken: any = this.userService.decodeJwtToken(token);
+      const username = decodedToken;
+      if (!username) {
+        throw new UnauthorizedException('Username not found in JWT token');
+      }
+
+      // Add the exercise using the fetched username and exercise name
+      return this.userService.addExercise(addExerciseDto, username);
+    } catch (error) {
+      console.error('Error adding exercise:', error);
+      throw error;
     }
-
-    // Decode the JWT token to get the username
-    const decodedToken: any = this.userService.decodeJwtToken(token);
-    const username = decodedToken;
-    if (!username) {
-      throw new UnauthorizedException('Username not found in JWT token');
-    }
-
-    // Use the username to fetch the corresponding user ID
-    /* const userId = await this.userService.getUsernameById(username);
-    if (!userId) {
-      throw new UnauthorizedException('User ID not found');
-    } */
-
-    // Add the exercise using the fetched user ID
-    return this.userService.addExercise(decodedToken, addExerciseDto);
-  } catch (error) {
-    console.error('Error adding exercise:', error);
-    throw error;
   }
-}
 
   /* @Delete(':id/exercises/:exerciseId')
   async deleteExercise(@Param('id') id: string, @Param('exerciseId') exerciseId: string) {

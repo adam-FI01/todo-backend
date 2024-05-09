@@ -1,9 +1,10 @@
 // exercise.dto.ts
 
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class AddExerciseDto {
   @IsString()
+  @IsNotEmpty()
   exerciseName: string;
   // Add other exercise properties if needed
 }

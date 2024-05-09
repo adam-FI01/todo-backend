@@ -95,35 +95,39 @@ export class UserService {
   }
 
   async addExercise(addExerciseDto: AddExerciseDto, username: string): Promise<any> {
-    console.log(this.decodedToken.username)
     try {
-      const exerciseName = addExerciseDto.exerciseName;
-      console.log(addExerciseDto.exerciseName)
+      const exerciseName = addExerciseDto.exerciseName; // Extract exercise name from DTO
+      console.log(exerciseName); // Check if exercise name is correctly extracted
+  
+      // Define the update operation to add the exercise
       const updateOperation = {
         $addToSet: {
           exercises: { name: exerciseName, date: [] },
         },
       };
   
-      // Find user by username and update exercises
+      // Find user by username and update exercises if the exercise name doesn't already exist
       const result = await this.userModel.findOneAndUpdate(
-        { username: this.decodedToken.username, 'exercises': { $ne: exerciseName } },
+        { username, 'exercises.name': { $ne: exerciseName } }, // Check if the exercise name doesn't already exist
         updateOperation,
         { new: true }
       );
   
+      // If result is null, throw NotFoundException
       if (!result) {
-        console.log(result);
         throw new NotFoundException('Failed to add exercise');
       }
   
+      // Log success message and return the updated user document
       console.log('Exercise added successfully:', result);
       return result;
     } catch (error) {
+      // Log and rethrow any errors that occur
       console.error('Error adding exercise:', error);
       throw error;
     }
   }
+  
 
 
  /* async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
