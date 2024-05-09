@@ -4,6 +4,7 @@ import { UserService } from './user.service';
 import { Exercise, ExerciseSchema, User, UserSchema } from '../schemas';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       secret: 'your-secret-key', // Replace with your secret key
     }),
+    HttpModule
   ],
   controllers: [UserController],
   providers: [UserService],

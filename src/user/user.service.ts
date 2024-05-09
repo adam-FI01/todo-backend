@@ -20,6 +20,26 @@ import { Request } from 'express';
 
 @Injectable()
 export class UserService {
+
+  decodedToken: any;
+  /* decodeJwtToken(token: string): any {
+    try {
+      const decodedToken = this.jwtService.decode(token) as any;
+      return decodedToken.username;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid JWT token');
+    }
+  } */
+
+  decodeJwtToken(token: string): any {
+    try {
+      this.decodedToken = this.jwtService.decode(token) as any;
+      return this.decodedToken.username;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid JWT token');
+    }
+  }
+
   constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService: JwtService) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -74,70 +94,39 @@ export class UserService {
 
   }
 
-  async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
-    const exerciseName = addExerciseDto.name;
-  
-    const updateOperation = {
-      $addToSet: {
-        exercises: { name: exerciseName, date: [] },
-      },
-    };
-  
+  async addExercise(addExerciseDto: AddExerciseDto, username: string): Promise<any> {
+    console.log(this.decodedToken.username)
     try {
+      const exerciseName = addExerciseDto.exerciseName;
+      console.log(addExerciseDto.exerciseName)
+      const updateOperation = {
+        $addToSet: {
+          exercises: { name: exerciseName, date: [] },
+        },
+      };
+  
+      // Find user by username and update exercises
       const result = await this.userModel.findOneAndUpdate(
-        { _id: userId, 'exercises.name': { $ne: exerciseName } }, // Corrected the condition
+        { username: this.decodedToken.username, 'exercises': { $ne: exerciseName } },
         updateOperation,
         { new: true }
       );
   
       if (!result) {
-        throw new NotFoundException('User not found');
+        console.log(result);
+        throw new NotFoundException('Failed to add exercise');
       }
   
-      console.log('After updateOne, result:', result);
-  
-      // ... rest of the code
+      console.log('Exercise added successfully:', result);
+      return result;
     } catch (error) {
-      console.error('Error in addExercise:', error);
+      console.error('Error adding exercise:', error);
       throw error;
     }
   }
 
-  /* async addExercise(userId: string, addExerciseDto: AddExerciseDto) {
-    const exerciseName = addExerciseDto.name;
-  
-    const updateOperation = {
-      $set: {
-        [exerciseName]: [],
-      },
-    };
-  
-    try {
-      const result = await this.userModel.findOneAndUpdate(
-        { _id: userId, [exerciseName]: { $exists: false } },
-        updateOperation,
-        { new: true }
-      );
-  
-      if (!result) {
-        throw new NotFoundException('User not found');
-      }
-  
-      console.log('After updateOne, result:', result);
-  
-      // ... rest of the code
-    } catch (error) {
-      console.error('Error in addExercise:', error);
-      throw error;
-    }
-  
-    // Add a separate log to retrieve and display the current state of the user document
-    const updatedUser = await this.userModel.findById(userId);
-    console.log('Current user document:', updatedUser);
-  } */
-  
-  
- async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
+
+ /* async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
@@ -153,7 +142,7 @@ export class UserService {
 
     user.exercises.splice(exerciseIndex, 1);
     return user.save();
-  }
+  } */
 
   async hashPassword(plainTextPassword: string): Promise<string> {
     const saltRounds = 10;
@@ -161,18 +150,9 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
     return hashedPassword;
   }
-  /* async getUsernameById(username: string): Promise<any> {
-    const user = await this.userModel.findOne({ username });
-  
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-  
-    return user._id;
-  } */
 
   async getUsernameById(req: Request): Promise<any> {
-    const token = req.cookies['jwtToken']; // Assuming the JWT token is stored in a cookie named 'jwtToken'
+    const token = req?.cookies['jwtToken']; // Assuming the JWT token is stored in a cookie named 'jwtToken'
     if (!token) {
       throw new UnauthorizedException('JWT token not found in cookies');
     }

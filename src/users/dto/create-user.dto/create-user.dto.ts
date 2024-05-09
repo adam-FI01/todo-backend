@@ -1,6 +1,8 @@
 // users/dto/create-user.dto.ts
 import {
   IsAlphanumeric,
+  IsArray,
+  IsEmpty,
   IsNotEmpty,
   IsString,
   Length,
