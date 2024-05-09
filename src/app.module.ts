@@ -21,7 +21,7 @@ export class AppModule implements NestModule {
     // Create an Express app instance
     const app = express();
 
-    // Enable CORS for all routes (adjust options as needed)
+    /* // Enable CORS for all routes (adjust options as needed)
     app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', '*'); // Allow all origins (for development)
       res.header(
@@ -29,7 +29,7 @@ export class AppModule implements NestModule {
         'Origin, X-Requested-With, Content-Type, Accept',
       );
       next();
-    });
+    }); */
 
     // Apply the Express app as middleware to the Nest application
     consumer.apply(app).forRoutes('*');
