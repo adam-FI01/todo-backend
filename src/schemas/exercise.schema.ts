@@ -5,7 +5,7 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Exercise extends Document {
-  @Prop()
+  @Prop({ required: true })
   @IsString()
   name: string;
 
@@ -14,5 +14,7 @@ export class Exercise extends Document {
 
   // Add other exercise properties, if any
 }
+
+export type ExerciseDocument = Exercise & Document;
 
 export const ExerciseSchema = SchemaFactory.createForClass(Exercise);

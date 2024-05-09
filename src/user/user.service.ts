@@ -40,7 +40,7 @@ export class UserService {
     }
   }
 
-  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService: JwtService) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService: JwtService, @InjectModel(Exercise.name) private exerciseModel: Model<Exercise>) {}
 
   async register(createUserDto: CreateUserDto) {
     const user = new CreateUserDto();
@@ -166,6 +166,29 @@ export class UserService {
       return decodedToken.username;
     } catch (error) {
       throw new UnauthorizedException('Invalid JWT token');
+    }
+  }
+
+  async getExercises(token: string): Promise<string[]> {
+    try {
+      // Decode the JWT token to get the username
+      const decodedToken: any = this.jwtService.decode(token);
+      if (!decodedToken) {
+        throw new UnauthorizedException('Invalid JWT token');
+      }
+      const username = decodedToken.username;
+
+      // Find the user by username
+      const user = await this.userModel.findOne({ username }).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Extract and return the names of exercises from the user's exercises array
+      return user.exercises.map(exercise => exercise.name);
+    } catch (error) {
+      console.error('Error getting exercises:', error);
+      throw error;
     }
   }
 }

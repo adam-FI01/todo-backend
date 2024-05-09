@@ -29,9 +29,8 @@ export class User extends Document {
   password: string;
 
   @Prop({ type: [ExerciseSchema] })
-  exercises: typeof ExerciseSchema[];
+  exercises:any = typeof ExerciseSchema;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
 

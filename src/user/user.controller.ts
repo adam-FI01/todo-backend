@@ -9,6 +9,7 @@ import { AddExerciseDto, DeleteExerciseDto } from "src/users/dto/exercises.dto";
 import { LoginUsernameDto } from "src/login-username.dto/login-username.dto";
 import { Request } from "express";
 import { HttpService } from "@nestjs/axios";
+import { Exercise } from "src/schemas";
 // ... (existing code)
 
 @Controller('users')
@@ -57,6 +58,23 @@ export class UserController {
       return this.userService.addExercise(addExerciseDto, username);
     } catch (error) {
       console.error('Error adding exercise:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-exercises')
+  async getExercises(@Req() req: Request) {
+    try {
+      // Extract the JWT token from the request cookies
+      const token = req.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in cookies');
+      }
+      
+      // Get the exercises for the authenticated user
+      return this.userService.getExercises(token);
+    } catch (error) {
+      console.error('Error getting exercises:', error);
       throw error;
     }
   }
