@@ -79,12 +79,32 @@ export class UserController {
     }
   }
 
-  /* @Delete(':id/exercises/:exerciseId')
-  async deleteExercise(@Param('id') id: string, @Param('exerciseId') exerciseId: string) {
-    // Ensure you are passing an instance of DeleteExerciseDto
-    const deleteExerciseDto: DeleteExerciseDto = { exerciseId };
-    return this.userService.deleteExercise(id, deleteExerciseDto);
-  } */
+  @Delete('/delete-exercise')
+  async deleteExercises(
+    @Req() req: Request,
+    @Body() deleteExerciseDto: DeleteExerciseDto
+  ) {
+    try {
+      // Extract the JWT token from the request headers
+      const token = req?.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in headers');
+      }
+
+      // Decode the JWT token to get the username
+      const decodedToken: any = this.userService.decodeJwtToken(token);
+      const username = decodedToken;
+      if (!username) {
+        throw new UnauthorizedException('Username not found in JWT token');
+      }
+
+      // Delete the exercises using the fetched username and exercise name
+      return this.userService.deleteExercises(deleteExerciseDto, username);
+    } catch (error) {
+      console.error('Error deleting exercises:', error);
+      throw error;
+    }
+  }
 
   @Get('getUserByUsername')
   async getUsernameById(@Req() req: Request) {

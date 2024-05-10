@@ -11,5 +11,6 @@ export class AddExerciseDto {
 
 export class DeleteExerciseDto {
   @IsString()
-  readonly exerciseId: string;
+  @IsNotEmpty()
+  exerciseName: string;
 }

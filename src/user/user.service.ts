@@ -130,23 +130,39 @@ export class UserService {
   
 
 
- /* async deleteExercise(userId: string, deleteExerciseDto: DeleteExerciseDto): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException('User not found');
+  async deleteExercises(deleteExerciseDto: DeleteExerciseDto, username: string): Promise<any> {
+    try {
+      const exerciseNameToDelete = deleteExerciseDto.exerciseName; // Extract exercise name from DTO
+      console.log(exerciseNameToDelete); // Check if exercise name is correctly extracted
+
+      // Define the delete operation to remove the exercise
+      const deleteOperation = {
+        $pull: {
+          exercises: { name: exerciseNameToDelete },
+        },
+      };
+
+      // Find user by username and delete exercises matching the exercise name
+      const result = await this.userModel.findOneAndUpdate(
+        { username },
+        deleteOperation,
+        { new: true }
+      );
+
+      // If result is null, throw NotFoundException
+      if (!result) {
+        throw new NotFoundException('Failed to delete exercises');
+      }
+
+      // Log success message and return the updated user document
+      console.log('Exercises deleted successfully:', result);
+      return result;
+    } catch (error) {
+      // Log and rethrow any errors that occur
+      console.error('Error deleting exercises:', error);
+      throw error;
     }
-
-    const exerciseIndex = user.exercises.findIndex(
-      (exercise) => exercise['_id'].toString() === deleteExerciseDto.exerciseId
-    );
-
-    if (exerciseIndex === -1) {
-      throw new NotFoundException('Exercise not found');
-    }
-
-    user.exercises.splice(exerciseIndex, 1);
-    return user.save();
-  } */
+  }
 
   async hashPassword(plainTextPassword: string): Promise<string> {
     const saltRounds = 10;
