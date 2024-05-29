@@ -1,20 +1,34 @@
 // exercise.schema.ts
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsString } from 'class-validator';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { IsString, IsNotEmpty, ArrayMinSize } from 'class-validator';
+
+@Schema()
+export class Set {
+  @Prop({ required: true })
+  @IsString()
+  @IsNotEmpty()
+  reps: string;
+
+  @Prop({ required: true })
+  @IsString()
+  @IsNotEmpty()
+  weight: string;
+}
+
+export const SetSchema = SchemaFactory.createForClass(Set);
 
 @Schema()
 export class Exercise extends Document {
   @Prop({ required: true })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
-  @Prop({default: [] }) // Set default value as an empty array for 'date'
-  sets: [];
-
-  // Add other exercise properties, if any
+ @Prop({ type: [SetSchema], default: [] })
+  @ArrayMinSize(1)
+  sets: Set[]; // Array of Set objects
 }
-
-export type ExerciseDocument = Exercise & Document;
 
 export const ExerciseSchema = SchemaFactory.createForClass(Exercise);

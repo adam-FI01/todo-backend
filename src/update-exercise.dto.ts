@@ -1,10 +1,16 @@
 // update-exercise.dto.ts
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-import { IsNotEmpty, IsNumber } from 'class-validator';
-
-// update-exercise.dto.ts
 export class UpdateExerciseDto {
+  @IsString()
+  @IsNotEmpty()
   exerciseName: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   reps: number;
+
+  @IsNumber()
+  @IsNotEmpty()
   weight: number;
 }

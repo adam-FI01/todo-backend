@@ -1,9 +1,15 @@
-// user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
-import { IsAlphanumeric, IsString, Length } from 'class-validator';
-import { ExerciseSchema } from './exercise.schema';
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { IsString, IsArray, ArrayMinSize, ValidateNested } from 'class-validator';
 
+@Schema()
+export class Set {
+  @Prop()
+  weight: number;
+
+  @Prop()
+  reps: number;
+}
 
 @Schema()
 export class Exercise {
@@ -11,7 +17,11 @@ export class Exercise {
   @IsString()
   name: string;
 
-  // Add other exercise properties, if any
+  @Prop({ type: [Set] }) // Define the type as an array of the custom schema "Set"
+  @IsArray()
+  @ArrayMinSize(1) // Ensure the array has at least one element
+  @ValidateNested({ each: true }) // Validate each element of the array using the Set schema
+  sets: Set[];
 }
 
 @Schema()
@@ -24,13 +34,10 @@ export class User extends Document {
 
   @Prop()
   @IsString()
-  @Length(6, 255)
-  @IsAlphanumeric()
   password: string;
 
-  @Prop({ type: [ExerciseSchema] })
-  exercises:any = typeof ExerciseSchema;
+  @Prop({ type: [Object], default: [] })
+  exercises: Exercise[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto/create-user.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto/login-user.dto';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Exercise, User } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { validate } from 'class-validator';
@@ -23,15 +23,6 @@ import { UpdateExerciseDto } from 'src/update-exercise.dto';
 export class UserService {
 
   decodedToken: any;
-  /* decodeJwtToken(token: string): any {
-    try {
-      const decodedToken = this.jwtService.decode(token) as any;
-      return decodedToken.username;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid JWT token');
-    }
-  } */
-
   decodeJwtToken(token: string): any {
     try {
       this.decodedToken = this.jwtService.decode(token) as any;
@@ -167,37 +158,40 @@ export class UserService {
 
   async updateExercise(username: string, updateExerciseDto: UpdateExerciseDto): Promise<any> {
     try {
+      const { exerciseName, reps, weight } = updateExerciseDto;
+  
       // Find the user by username
       const user = await this.userModel.findOne({ username }).exec();
       if (!user) {
         throw new NotFoundException('User not found');
       }
   
-      // Extract the exercise details
-      const { exerciseName, reps, weight } = updateExerciseDto;
-  
-      // Find the exercise by name
+      // Find the exercise by name within the user's exercises array
       const exercise = user.exercises.find(ex => ex.name === exerciseName);
       if (!exercise) {
         throw new NotFoundException('Exercise not found');
       }
   
-      // Push the new array [reps, weight] to the sets array
-      exercise.sets.push([reps, weight]);
+      // Create a new set object with the provided reps and weight
+      const newSet = {
+        _id: new Types.ObjectId(), // Generate a new ObjectId for the set
+        reps,
+        weight
+      };
   
-      // Save the updated user document
+      // Push the new set to the sets array of the found exercise
+      exercise.sets.push(newSet);
+  
+      // Save the user document to persist the changes
       await user.save();
   
+      // Return the updated exercise
       return exercise;
     } catch (error) {
       console.error('Error updating exercise:', error);
       throw error;
     }
   }
-  
-  
-  
-  
   
   async hashPassword(plainTextPassword: string): Promise<string> {
     const saltRounds = 10;

@@ -28,14 +28,6 @@ export class UserController {
     return this.userService.login(loginUserDto);
   }
 
-  /* @Post(':id/add-exercise')
-  async addExercise(
-    @Param('id') id: string,
-    @Body() addExerciseDto: AddExerciseDto,
-  ) {
-    return this.userService.addExercise(, addExerciseDto);
-  } */
-
   @Post('/add-exercise')
   async addExercise(
     @Req() req: Request,
@@ -64,32 +56,15 @@ export class UserController {
   }
 
   @Patch('/update-exercise')
-  async updateExercise(
-    @Req() req: Request,
-    @Body() updateExerciseDto: UpdateExerciseDto
-  ) {
-    try {
-      // Get the JWT token from the request cookies
-      const token = req.cookies['jwtToken'];
-      if (!token) {
-        throw new UnauthorizedException('JWT token not found in cookies');
-      }
-
-      // Decode the JWT token to get the username
-      const username = this.userService.decodeJwtToken(token);
-      if (!username) {
-        throw new UnauthorizedException('Username not found in JWT token');
-      }
-
-      // Call the service method to update the exercise
-      return this.userService.updateExercise(username, updateExerciseDto);
-    } catch (error) {
-      console.error('Error updating exercise:', error);
-      throw error;
+  async updateExercise(@Req() req: Request, @Body() updateExerciseDto: UpdateExerciseDto) {
+    const token = req.cookies['jwtToken'];
+    if (!token) {
+      throw new UnauthorizedException('JWT token not found in cookies');
     }
+
+    const username = this.userService.decodeJwtToken(token);
+    return this.userService.updateExercise(username, updateExerciseDto);
   }
-
-
 
   @Get('/get-exercises')
   async getExercises(@Req() req: Request) {
