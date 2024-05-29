@@ -16,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { AddExerciseDto, DeleteExerciseDto } from 'src/users/dto/exercises.dto';
 import { Request } from 'express';
+import { UpdateExerciseDto } from 'src/update-exercise.dto';
 
 
 @Injectable()
@@ -40,7 +41,7 @@ export class UserService {
     }
   }
 
-  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService: JwtService, @InjectModel(Exercise.name) private exerciseModel: Model<Exercise>) {}
+  constructor(@InjectModel(User.name) public userModel: Model<User>, private readonly jwtService: JwtService, @InjectModel(Exercise.name) private exerciseModel: Model<Exercise>) {}
 
   async register(createUserDto: CreateUserDto) {
     const user = new CreateUserDto();
@@ -102,7 +103,7 @@ export class UserService {
       // Define the update operation to add the exercise
       const updateOperation = {
         $addToSet: {
-          exercises: { name: exerciseName, date: [] },
+          exercises: { name: exerciseName, sets: [] },
         },
       };
   
@@ -164,6 +165,40 @@ export class UserService {
     }
   }
 
+  async updateExercise(username: string, updateExerciseDto: UpdateExerciseDto): Promise<any> {
+    try {
+      // Find the user by username
+      const user = await this.userModel.findOne({ username }).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+  
+      // Extract the exercise details
+      const { exerciseName, reps, weight } = updateExerciseDto;
+  
+      // Find the exercise by name
+      const exercise = user.exercises.find(ex => ex.name === exerciseName);
+      if (!exercise) {
+        throw new NotFoundException('Exercise not found');
+      }
+  
+      // Push the new array [reps, weight] to the sets array
+      exercise.sets.push([reps, weight]);
+  
+      // Save the updated user document
+      await user.save();
+  
+      return exercise;
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      throw error;
+    }
+  }
+  
+  
+  
+  
+  
   async hashPassword(plainTextPassword: string): Promise<string> {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);

@@ -10,6 +10,7 @@ import { LoginUsernameDto } from "src/login-username.dto/login-username.dto";
 import { Request } from "express";
 import { HttpService } from "@nestjs/axios";
 import { Exercise } from "src/schemas";
+import { UpdateExerciseDto } from "src/update-exercise.dto";
 // ... (existing code)
 
 @Controller('users')
@@ -61,6 +62,34 @@ export class UserController {
       throw error;
     }
   }
+
+  @Patch('/update-exercise')
+  async updateExercise(
+    @Req() req: Request,
+    @Body() updateExerciseDto: UpdateExerciseDto
+  ) {
+    try {
+      // Get the JWT token from the request cookies
+      const token = req.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in cookies');
+      }
+
+      // Decode the JWT token to get the username
+      const username = this.userService.decodeJwtToken(token);
+      if (!username) {
+        throw new UnauthorizedException('Username not found in JWT token');
+      }
+
+      // Call the service method to update the exercise
+      return this.userService.updateExercise(username, updateExerciseDto);
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      throw error;
+    }
+  }
+
+
 
   @Get('/get-exercises')
   async getExercises(@Req() req: Request) {

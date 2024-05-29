@@ -9,8 +9,8 @@ export class Exercise extends Document {
   @IsString()
   name: string;
 
-  @Prop({ type: [Date], default: [] }) // Set default value as an empty array for 'date'
-  date: Date[];
+  @Prop({default: [] }) // Set default value as an empty array for 'date'
+  sets: [];
 
   // Add other exercise properties, if any
 }
