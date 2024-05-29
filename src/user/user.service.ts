@@ -156,41 +156,48 @@ export class UserService {
     }
   }
 
-  async updateExercise(username: string, updateExerciseDto: UpdateExerciseDto): Promise<any> {
-    try {
-      const { exerciseName, reps, weight } = updateExerciseDto;
-  
-      // Find the user by username
-      const user = await this.userModel.findOne({ username }).exec();
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-  
-      // Find the exercise by name within the user's exercises array
-      const exercise = user.exercises.find(ex => ex.name === exerciseName);
-      if (!exercise) {
-        throw new NotFoundException('Exercise not found');
-      }
-  
-      // Create a new set object with the provided reps and weight
-      const newSet = {
-        _id: new Types.ObjectId(), // Generate a new ObjectId for the set
-        reps,
-        weight
-      };
-  
-      // Push the new set to the sets array of the found exercise
-      exercise.sets.push(newSet);
-  
-      // Save the user document to persist the changes
-      await user.save();
-  
-      // Return the updated exercise
-      return exercise;
-    } catch (error) {
-      console.error('Error updating exercise:', error);
-      throw error;
+  async updateExercise(
+    username: string,
+    updateExerciseDto: UpdateExerciseDto,
+  ): Promise<any> {
+    const { exerciseName, reps, weight } = updateExerciseDto;
+
+    // Find the user by username
+    const user = await this.userModel.findOne({ username }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+
+    // Find the index of the exercise within the user's exercises array
+    const exerciseIndex = user.exercises.findIndex(
+      ex => ex.name === exerciseName,
+    );
+    if (exerciseIndex === -1) {
+      throw new NotFoundException('Exercise not found');
+    }
+
+    // Generate a unique ObjectId for the new set
+    const setId = new Types.ObjectId();
+
+    // Create a new set object with the provided reps, weight, and unique _id
+    const newSet = {
+      _id: setId,
+      reps,
+      weight,
+    };
+
+    // Push the new set to the sets array of the found exercise
+    user.exercises[exerciseIndex].sets.push(newSet);
+
+    // Update the sets array in the database
+    await this.userModel.findOneAndUpdate(
+      { username, 'exercises.name': exerciseName },
+      { $set: { 'exercises.$.sets': user.exercises[exerciseIndex].sets } },
+      { new: true },
+    );
+
+    // Return the updated exercise
+    return user.exercises[exerciseIndex];
   }
   
   async hashPassword(plainTextPassword: string): Promise<string> {
