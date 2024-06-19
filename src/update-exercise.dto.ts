@@ -13,4 +13,8 @@ export class UpdateExerciseDto {
   @IsNumber()
   @IsNotEmpty()
   weight: number;
+
+  @IsString()
+  @IsNotEmpty()
+  intensity: string;
 }

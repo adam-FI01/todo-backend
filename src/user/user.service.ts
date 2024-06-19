@@ -160,7 +160,7 @@ export class UserService {
     username: string,
     updateExerciseDto: UpdateExerciseDto,
   ): Promise<any> {
-    const { exerciseName, reps, weight } = updateExerciseDto;
+    const { exerciseName, reps, weight, intensity } = updateExerciseDto;
 
     // Find the user by username
     const user = await this.userModel.findOne({ username }).exec();
@@ -184,6 +184,7 @@ export class UserService {
       _id: setId,
       reps,
       weight,
+      intensity
     };
 
     // Push the new set to the sets array of the found exercise
