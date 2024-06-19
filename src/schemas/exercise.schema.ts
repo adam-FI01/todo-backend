@@ -2,7 +2,7 @@
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { IsString, IsNotEmpty, ArrayMinSize } from 'class-validator';
+import { IsString, IsNotEmpty, ArrayMinSize, isNotEmpty } from 'class-validator';
 
 @Schema()
 export class Set {
@@ -15,6 +15,13 @@ export class Set {
   @IsString()
   @IsNotEmpty()
   weight: string;
+
+  @IsString()
+  @IsNotEmpty()
+  intensity: string;
+
+  @IsNotEmpty()
+  _id: any;
 }
 
 export const SetSchema = SchemaFactory.createForClass(Set);

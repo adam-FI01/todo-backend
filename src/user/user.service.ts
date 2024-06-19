@@ -244,4 +244,73 @@ export class UserService {
       throw error;
     }
   }
+
+  /* async getExercisesForStats(token: string): Promise<any[]> {
+    try {
+      // Decode the JWT token to get the username
+      const decodedToken: any = this.jwtService.decode(token);
+      if (!decodedToken) {
+        throw new UnauthorizedException('Invalid JWT token');
+      }
+      const username = decodedToken.username;
+
+      // Find the user by username and populate exercises with sets
+      const user = await this.userModel.findOne({ username }).populate('exercises.sets').exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Map user's exercises to return exercise names and sets
+      const exercisesWithSets = user.exercises?.map(exercise => ({
+        name: exercise.name,
+        sets: exercise.sets
+      }));
+
+      return exercisesWithSets;
+    } catch (error) {
+      console.error('Error getting exercises:', error);
+      throw error;
+    }
+  } */
+
+  async getExercisesForStats(token: string, exerciseName: string): Promise<any> {
+    try {
+        // Decode the JWT token to get the username
+        const decodedToken: any = this.jwtService.decode(token);
+        if (!decodedToken) {
+            throw new UnauthorizedException('Invalid JWT token');
+        }
+        const username = decodedToken.username;
+        console.log(`Decoded username: ${username}`);
+
+        // Find the user by username and populate exercises with sets
+        const user = await this.userModel.findOne({ username }).exec();
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        console.log(`User found: ${user.username}`);
+        console.log(`User exercises: ${JSON.stringify(user.exercises, null, 2)}`);
+
+        // Find the exercise by name
+        const exercise = user.exercises.find(ex => ex.name === exerciseName);
+        if (!exercise) {
+            console.log(`Exercise '${exerciseName}' not found`);
+            throw new NotFoundException('Exercise not found');
+        }
+        console.log(`Exercise found: ${JSON.stringify(exercise, null, 2)}`);
+
+        // Return the exercise with sets
+        return {
+            name: exercise.name,
+            sets: exercise.sets
+        };
+    } catch (error) {
+        console.error('Error getting exercises:', error);
+        throw error;
+    }
+}
+
+
+
+
 }

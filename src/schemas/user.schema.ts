@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
-import { IsString, IsArray, ArrayMinSize, ValidateNested } from 'class-validator';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { IsString, IsArray, ArrayMinSize, ValidateNested, IsNotEmpty } from 'class-validator';
 
 @Schema()
 export class Set {
@@ -9,6 +9,12 @@ export class Set {
 
   @Prop()
   reps: number;
+
+  @Prop()
+  intensity: string;
+
+  @Prop({ type: Types.ObjectId, default: new Types.ObjectId() }) // Ensure each set has a unique ObjectId
+  _id: Types.ObjectId;
 }
 
 @Schema()

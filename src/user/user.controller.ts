@@ -83,6 +83,28 @@ export class UserController {
     }
   }
 
+  @Get('/get-exercisesForStats')
+  async getExercisesForStats(@Req() req: Request, @Body('exerciseName') exerciseName: string) {
+      try {
+          // Extract the JWT token from the request cookies
+          const token = req.cookies['jwtToken'];
+          if (!token) {
+              throw new UnauthorizedException('JWT token not found in cookies');
+          }
+          console.log(`JWT token: ${token}`);
+          console.log(`Exercise name: ${exerciseName}`);
+
+          // Get the exercises for the authenticated user
+          return this.userService.getExercisesForStats(token, exerciseName);
+      } catch (error) {
+          console.error('Error getting exercises:', error);
+          throw error;
+      }
+  }
+
+
+
+
   @Delete('/delete-exercise')
   async deleteExercises(
     @Req() req: Request,
