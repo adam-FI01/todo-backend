@@ -1,5 +1,13 @@
 // users/dto/create-user.dto.ts
-import { IsAlphanumeric, IsNotEmpty, IsString, Length, Matches } from "class-validator";
+import {
+  IsAlphanumeric,
+  IsArray,
+  IsEmpty,
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
