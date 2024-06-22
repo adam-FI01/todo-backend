@@ -3,6 +3,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import { JwtService } from '@nestjs/jwt';
 import { AddExerciseDto, DeleteExerciseDto } from 'src/users/dto/exercises.dto';
 import { Request } from 'express';
 import { UpdateExerciseDto } from 'src/update-exercise.dto';
+import { WeeklyStatsDto } from 'src/daily-stats.dto';
+import { ObjectId } from 'mongodb';
 
 
 @Injectable()
@@ -309,8 +312,41 @@ export class UserService {
         throw error;
     }
 }
+async getSetsWithinLastWeek(token: string, exerciseName: string): Promise<any[]> {
+  try {
+      const decodedToken: any = this.jwtService.decode(token);
+      if (!decodedToken) {
+          throw new UnauthorizedException('Invalid JWT token');
+      }
+      const username = decodedToken.username;
 
+      const user = await this.userModel.findOne({ username }).exec();
+      if (!user) {
+          throw new NotFoundException('User not found');
+      }
 
+      // Calculate the date 7 days ago
+      const aWeekAgo = new Date();
+      aWeekAgo.setDate(aWeekAgo.getDate() - 7);
 
+      // Find the exercise by name
+      const exercise = user.exercises.find(e => e.name === exerciseName);
+      if (!exercise) {
+          throw new NotFoundException('Exercise not found');
+      }
 
+      // Filter sets within the last week for the found exercise
+      const setsWithinWeek = exercise.sets.filter(set => {
+          if (!set._id || !ObjectId.isValid(set._id)) {
+              return false; // Skip this set if _id is invalid or missing
+          }
+          const timestamp = new ObjectId(set._id).getTimestamp();
+          return timestamp >= aWeekAgo;
+      });
+
+      return setsWithinWeek;
+  } catch (error) {
+      throw new InternalServerErrorException(error.message);
+  }
+}
 }

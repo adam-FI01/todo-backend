@@ -28,6 +28,7 @@ export class Exercise {
   @ArrayMinSize(1) // Ensure the array has at least one element
   @ValidateNested({ each: true }) // Validate each element of the array using the Set schema
   sets: Set[];
+  _id: any;
 }
 
 @Schema()

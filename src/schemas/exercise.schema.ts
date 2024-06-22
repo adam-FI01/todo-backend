@@ -1,6 +1,7 @@
 // exercise.schema.ts
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Schema as MongooseSchema } from 'mongoose';
 import { Document, Types } from 'mongoose';
 import { IsString, IsNotEmpty, ArrayMinSize, isNotEmpty } from 'class-validator';
 
@@ -29,13 +30,16 @@ export const SetSchema = SchemaFactory.createForClass(Set);
 @Schema()
 export class Exercise extends Document {
   @Prop({ required: true })
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
- @Prop({ type: [SetSchema], default: [] })
-  @ArrayMinSize(1)
-  sets: Set[]; // Array of Set objects
+  @Prop([{ type: MongooseSchema.Types.ObjectId, ref: 'Set' }])
+  sets: any[];
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  user: any;
+
+  @Prop({ default: Date.now })
+  createdAt: Date;
 }
 
 export const ExerciseSchema = SchemaFactory.createForClass(Exercise);

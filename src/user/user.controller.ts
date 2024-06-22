@@ -11,6 +11,7 @@ import { Request } from "express";
 import { HttpService } from "@nestjs/axios";
 import { Exercise } from "src/schemas";
 import { UpdateExerciseDto } from "src/update-exercise.dto";
+import { WeeklyStatsDto } from "src/daily-stats.dto";
 // ... (existing code)
 
 @Controller('users')
@@ -102,7 +103,22 @@ export class UserController {
       }
   }
 
+  @Post('weekly-stats')
+  async getSetsWithinLastWeek(@Req() req: Request, @Body('exerciseName') exerciseName: string) {
+    try {
+      // Extract the JWT token from the request cookies
+      const token = req.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in cookies');
+      }
 
+      // Get the weekly stats for the given exercise name
+      return this.userService.getSetsWithinLastWeek(token, exerciseName);
+    } catch (error) {
+      console.error('Error getting weekly stats:', error);
+      throw error;
+    }
+  }
 
 
   @Delete('/delete-exercise')
