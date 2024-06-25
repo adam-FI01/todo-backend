@@ -248,7 +248,7 @@ export class UserService {
     }
   }
 
-  /* async getExercisesForStats(token: string): Promise<any[]> {
+  async getExercisesForStats(token: string, exerciseName: string): Promise<any> {
     try {
       // Decode the JWT token to get the username
       const decodedToken: any = this.jwtService.decode(token);
@@ -256,62 +256,32 @@ export class UserService {
         throw new UnauthorizedException('Invalid JWT token');
       }
       const username = decodedToken.username;
+      console.log(`Decoded username: ${username}`);
 
       // Find the user by username and populate exercises with sets
-      const user = await this.userModel.findOne({ username }).populate('exercises.sets').exec();
+      const user = await this.userModel.findOne({ username }).exec();
       if (!user) {
         throw new NotFoundException('User not found');
       }
+      console.log(`User found: ${user.username}`);
+      console.log(`User exercises: ${JSON.stringify(user.exercises, null, 2)}`);
 
-      // Map user's exercises to return exercise names and sets
-      const exercisesWithSets = user.exercises?.map(exercise => ({
-        name: exercise.name,
-        sets: exercise.sets
-      }));
+      // Find the exercise by name
+      const exercise = user.exercises.find(ex => ex.name === exerciseName);
+      if (!exercise) {
+        console.log(`Exercise '${exerciseName}' not found`);
+        throw new NotFoundException('Exercise not found');
+      }
+      console.log(`Exercise found: ${JSON.stringify(exercise, null, 2)}`);
 
-      return exercisesWithSets;
+      // Return the exercise with all sets
+      return exercise.sets;
     } catch (error) {
       console.error('Error getting exercises:', error);
-      throw error;
+      throw new InternalServerErrorException(error.message);
     }
-  } */
+  }
 
-  async getExercisesForStats(token: string, exerciseName: string): Promise<any> {
-    try {
-        // Decode the JWT token to get the username
-        const decodedToken: any = this.jwtService.decode(token);
-        if (!decodedToken) {
-            throw new UnauthorizedException('Invalid JWT token');
-        }
-        const username = decodedToken.username;
-        console.log(`Decoded username: ${username}`);
-
-        // Find the user by username and populate exercises with sets
-        const user = await this.userModel.findOne({ username }).exec();
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-        console.log(`User found: ${user.username}`);
-        console.log(`User exercises: ${JSON.stringify(user.exercises, null, 2)}`);
-
-        // Find the exercise by name
-        const exercise = user.exercises.find(ex => ex.name === exerciseName);
-        if (!exercise) {
-            console.log(`Exercise '${exerciseName}' not found`);
-            throw new NotFoundException('Exercise not found');
-        }
-        console.log(`Exercise found: ${JSON.stringify(exercise, null, 2)}`);
-
-        // Return the exercise with sets
-        return {
-            name: exercise.name,
-            sets: exercise.sets
-        };
-    } catch (error) {
-        console.error('Error getting exercises:', error);
-        throw error;
-    }
-}
 async getSetsWithinLastWeek(token: string, exerciseName: string): Promise<any[]> {
   try {
       const decodedToken: any = this.jwtService.decode(token);
@@ -345,6 +315,82 @@ async getSetsWithinLastWeek(token: string, exerciseName: string): Promise<any[]>
       });
 
       return setsWithinWeek;
+  } catch (error) {
+      throw new InternalServerErrorException(error.message);
+  }
+}
+
+async getSetsWithinLastThirtyDays(token: string, exerciseName: string): Promise<any[]> {
+  try {
+      const decodedToken: any = this.jwtService.decode(token);
+      if (!decodedToken) {
+          throw new UnauthorizedException('Invalid JWT token');
+      }
+      const username = decodedToken.username;
+
+      const user = await this.userModel.findOne({ username }).exec();
+      if (!user) {
+          throw new NotFoundException('User not found');
+      }
+
+      // Calculate the date 30 days ago
+      const aMonthAgo = new Date();
+      aMonthAgo.setDate(aMonthAgo.getDate() - 30);
+
+      // Find the exercise by name
+      const exercise = user.exercises.find(e => e.name === exerciseName);
+      if (!exercise) {
+          throw new NotFoundException('Exercise not found');
+      }
+
+      // Filter sets within the last week for the found exercise
+      const setsWithinWeek = exercise.sets.filter(set => {
+          if (!set._id || !ObjectId.isValid(set._id)) {
+              return false; // Skip this set if _id is invalid or missing
+          }
+          const timestamp = new ObjectId(set._id).getTimestamp();
+          return timestamp >= aMonthAgo;
+      });
+
+      return setsWithinWeek;
+  } catch (error) {
+      throw new InternalServerErrorException(error.message);
+  }
+}
+
+async getSetsWithinLastTwentyFourHours(token: string, exerciseName: string): Promise<any[]> {
+  try {
+      const decodedToken: any = this.jwtService.decode(token);
+      if (!decodedToken) {
+          throw new UnauthorizedException('Invalid JWT token');
+      }
+      const username = decodedToken.username;
+
+      const user = await this.userModel.findOne({ username }).exec();
+      if (!user) {
+          throw new NotFoundException('User not found');
+      }
+
+      // Calculate the date 24 hours ago
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      // Find the exercise by name
+      const exercise = user.exercises.find(e => e.name === exerciseName);
+      if (!exercise) {
+          throw new NotFoundException('Exercise not found');
+      }
+
+      // Filter sets within the last 24 hours for the found exercise
+      const setsWithinTwentyFourHours = exercise.sets.filter(set => {
+          if (!set._id || !ObjectId.isValid(set._id)) {
+              return false; // Skip this set if _id is invalid or missing
+          }
+          const timestamp = new ObjectId(set._id).getTimestamp();
+          return timestamp >= twentyFourHoursAgo;
+      });
+
+      return setsWithinTwentyFourHours;
   } catch (error) {
       throw new InternalServerErrorException(error.message);
   }

@@ -84,7 +84,7 @@ export class UserController {
     }
   }
 
-  @Get('/get-exercisesForStats')
+  @Post('/get-exercisesForStats')
   async getExercisesForStats(@Req() req: Request, @Body('exerciseName') exerciseName: string) {
       try {
           // Extract the JWT token from the request cookies
@@ -116,6 +116,40 @@ export class UserController {
       return this.userService.getSetsWithinLastWeek(token, exerciseName);
     } catch (error) {
       console.error('Error getting weekly stats:', error);
+      throw error;
+    }
+  }
+
+  @Post('monthly-stats')
+  async getSetsWithinLastThirtyDays(@Req() req: Request, @Body('exerciseName') exerciseName: string) {
+    try {
+      // Extract the JWT token from the request cookies
+      const token = req.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in cookies');
+      }
+
+      // Get the weekly stats for the given exercise name
+      return this.userService.getSetsWithinLastThirtyDays(token, exerciseName);
+    } catch (error) {
+      console.error('Error getting weekly stats:', error);
+      throw error;
+    }
+  }
+
+  @Post('daily-stats')
+  async getSetsWithinLastTwentyFourHours(@Req() req: Request, @Body('exerciseName') exerciseName: string) {
+    try {
+      // Extract the JWT token from the request cookies
+      const token = req.cookies['jwtToken'];
+      if (!token) {
+        throw new UnauthorizedException('JWT token not found in cookies');
+      }
+
+      // Get the daily stats for the given exercise name
+      return this.userService.getSetsWithinLastTwentyFourHours(token, exerciseName);
+    } catch (error) {
+      console.error('Error getting daily stats:', error);
       throw error;
     }
   }
