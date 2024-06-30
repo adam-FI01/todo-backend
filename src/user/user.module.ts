@@ -10,8 +10,11 @@ import { HttpModule } from '@nestjs/axios';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
       { name: Exercise.name, schema: ExerciseSchema },]),
-    JwtModule.register({
+    /* JwtModule.register({
       secret: 'your-secret-key', // Replace with your secret key
+    }), */
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // Use environment variable
     }),
     HttpModule
   ],
